@@ -1,11 +1,4 @@
 
-import {Gloria_Hallelujah} from 'next/font/google'
-
-const ifFont = Gloria_Hallelujah({
-  weight: "400", 
-  subsets: ['latin']
-})
-
 export const drawConfig = (
   cnv: React.RefObject<HTMLCanvasElement>,
   contextRef: React.MutableRefObject<CanvasRenderingContext2D | null>
@@ -14,7 +7,6 @@ export const drawConfig = (
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
-  console.log(ctx);
   ctx.translate(0.5, 0.5);
   contextRef.current = ctx;
   ctx.lineWidth = 3;

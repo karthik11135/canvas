@@ -10,12 +10,12 @@ const Buttons = ({
   return (
     <div className="flex gap-2 text-center text-pink-700 bg-green-500 z-10 mb-4 mx-auto">
       <button
-        onClick={() => setTool('draw')}
+        onClick={() => setTool('select')}
         className={`border px-2 ${
-          tool === 'draw' ? 'text-blue-800 bg-white ' : ''
+          tool === 'select' ? 'text-blue-800 bg-white ' : ''
         }`}
       >
-        Draw
+        Select
       </button>
       <button
         onClick={() => setTool('rectangle')}

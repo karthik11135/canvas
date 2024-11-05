@@ -1,7 +1,11 @@
-import { drawCircle, startCircle } from './circle';
-import { drawRectangle, startRectangle } from './rectangle';
-import { drawLine, startLine } from './line';
-import { Shape } from '@/app/page';
+import { dragginShapeType, Shape } from '@/types/alltypes';
+import {
+  findNearestShape,
+  startUpdatingShape,
+  setStartXandY,
+} from './features';
+import { drawRectangle, drawCircle, drawLine } from './drawShapes';
+import { clearCanvasAndRedraw } from './features';
 
 export const mouseMoveHandler = (
   e: React.MouseEvent<HTMLCanvasElement, MouseEvent>,
@@ -11,35 +15,45 @@ export const mouseMoveHandler = (
   startX: React.MutableRefObject<number | null>,
   startY: React.MutableRefObject<number | null>,
   contextRef: React.MutableRefObject<CanvasRenderingContext2D | null>,
-  shapes: Shape[]
+  shapes: Shape[],
+  selectedShape: number,
+  setShapes: React.Dispatch<React.SetStateAction<Shape[]>>,
+  setSelectedShape: React.Dispatch<React.SetStateAction<number>>,
+  draggingShape: Shape | null,
+  setDraggingShape: React.Dispatch<React.SetStateAction<Shape | null>>
 ) => {
-  e.preventDefault();
-  e.stopPropagation();
+  // console.log(shapes);
+  if (!drawing || !startX.current || !startY.current || !cnv) return;
 
-  if (drawing === false || tool === 'text') {
-    return;
+  clearCanvasAndRedraw(contextRef.current, cnv, shapes);
+
+  if (draggingShape && selectedShape !== -1) {
+    startUpdatingShape(
+      draggingShape,
+      contextRef,
+      e.nativeEvent.offsetX,
+      e.nativeEvent.offsetY
+    );
   }
 
-  if (tool === 'rectangle')
-    drawRectangle(
-      contextRef.current,
-      e,
-      cnv,
-      startX.current,
-      startY.current,
-      shapes
-    );
-  else if (tool === 'circle') {
-    drawCircle(
-      contextRef.current,
-      e,
-      cnv,
-      startX.current,
-      startY.current,
-      shapes
-    );
-  } else if (tool === 'line') {
-    drawLine(contextRef.current, e, startX.current, startY.current, shapes);
+  const drawingTools = {
+    ctx: contextRef.current,
+    startX: startX.current,
+    startY: startY.current,
+    offSetX: e.nativeEvent.offsetX,
+    offSetY: e.nativeEvent.offsetY,
+  };
+
+  switch (tool) {
+    case 'rectangle':
+      drawRectangle(drawingTools);
+      break;
+    case 'circle':
+      drawCircle(drawingTools);
+      break;
+    case 'line':
+      drawLine(drawingTools);
+      break;
   }
 };
 
@@ -53,33 +67,55 @@ export const mouseDownHandler = (
   setDrawing: React.Dispatch<React.SetStateAction<boolean>>,
   shapes: Shape[],
   setWriting: React.Dispatch<React.SetStateAction<boolean>>,
+  setSelectedShape: React.Dispatch<React.SetStateAction<number>>,
+  selectedShape: number,
+  setShapes: React.Dispatch<React.SetStateAction<Shape[]>>,
+  draggingShape: Shape | null,
+  setDraggingShape: React.Dispatch<React.SetStateAction<Shape | null>>,
   textRef?: React.MutableRefObject<null | HTMLInputElement>
 ) => {
-  e.preventDefault();
-  e.stopPropagation();
-  if (!cnv) return;
+  if (!cnv || !cnv.current || (textRef && textRef.current)) return;
 
-  if (textRef && textRef.current) {
-    return;
-  }
+  setStartXandY(
+    startX,
+    startY,
+    e.nativeEvent.clientX,
+    e.nativeEvent.clientY,
+    cnv.current.offsetLeft,
+    cnv.current.offsetTop
+  );
 
-  startX.current = e.nativeEvent.clientX - Number(cnv.current?.offsetLeft);
-  startY.current = e.nativeEvent.clientY - Number(cnv.current?.offsetTop);
   setDrawing(true);
-  if (tool === 'text') {
-    setWriting(true);
-    return;
+
+  switch (tool) {
+    case 'select':
+      const uId = findNearestShape(startX.current, startY.current, shapes);
+      if (uId !== -1) {
+        startUpdatingShape(
+          shapes[uId],
+          contextRef,
+          e.nativeEvent.offsetX,
+          e.nativeEvent.offsetY
+        );
+
+        const filteredShapes = shapes.filter((_, ind) => uId !== ind);
+        setSelectedShape(uId);
+        setDraggingShape(shapes[uId]);
+        setShapes(filteredShapes);
+        setWriting(false);
+        return;
+      }
+      break;
+    case 'text':
+      setWriting(true);
+      setSelectedShape(-1);
+      setDraggingShape(null);
+      return;
   }
+
   setWriting(false);
-
-  contextRef.current?.beginPath();
-
-  if (tool === 'rectangle') startRectangle(e, cnv, startX, startY);
-  else if (tool === 'circle') {
-    startCircle(e, cnv, startX, startY);
-  } else if (tool === 'line') {
-    startLine(e, cnv, startX, startY, contextRef.current);
-  }
+  setSelectedShape(-1);
+  setDraggingShape(null);
 };
 
 export const mouseUpHandler = (
@@ -92,19 +128,27 @@ export const mouseUpHandler = (
   setShapes: React.Dispatch<React.SetStateAction<Shape[]>>,
   setTool: React.Dispatch<React.SetStateAction<string>>,
   setWriting: React.Dispatch<React.SetStateAction<boolean>>,
+  selectedShape: number,
+  setSelectedShape: React.Dispatch<React.SetStateAction<number>>,
+  draggingShape: Shape | null,
+  setDraggingShape: React.Dispatch<React.SetStateAction<Shape | null>>,
   textRef?: React.MutableRefObject<null | HTMLInputElement>
 ) => {
-  e.preventDefault();
-  e.stopPropagation();
-  if (tool == '') return;
-  setTool('draw');
-  setWriting(false);
 
+  if (tool == '') return;
   if (!startX.current || !startY.current) return;
+  setTool('select');
+  setDrawing(false);
+  setWriting(false);
+  if (tool === 'select' && !draggingShape) return;
+  if (tool === 'text') {
+    textRef?.current?.blur();
+    return;
+  }
 
   const { offsetX, offsetY } = e.nativeEvent;
 
-  const shape: Shape = {
+  let shape: Shape = {
     type: tool,
     startX: startX.current,
     startY: startY.current,
@@ -112,20 +156,20 @@ export const mouseUpHandler = (
     endY: offsetY,
   };
 
-  if (shape.type === 'text') {
-    textRef?.current?.blur();
-    setDrawing(false);
-    return;
-  }
-
-  if (tool !== 'draw') {
-    setShapes((prev) => {
-      return [...prev, shape];
-    });
+  if (tool === 'select' && draggingShape) {
+    shape = {
+      type: draggingShape.type,
+      startX: offsetX,
+      startY: offsetY,
+      endX: offsetX + draggingShape.endX - draggingShape.startX,
+      endY: offsetY + draggingShape.endY - draggingShape.startY,
+    };
   }
 
   contextRef.current?.closePath();
-  setDrawing(false);
+  setShapes((prev) => {
+    return [...prev, shape];
+  });
 };
 
 export const textOnFocusHandler = () => {};

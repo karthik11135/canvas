@@ -2,31 +2,15 @@
 import Buttons from '@/utils/Buttons';
 import { useEffect, useRef, useState } from 'react';
 import { drawConfig } from '@/utils/drawConfig';
-
 import { Gloria_Hallelujah } from 'next/font/google';
-
 import {
   mouseUpHandler,
   mouseMoveHandler,
   mouseDownHandler,
   textFocusOutHandler,
-  textOnFocusHandler
+  textOnFocusHandler,
 } from '@/utils/handlers';
-
-export interface Shape {
-  type: string;
-  startX: number;
-  startY: number;
-  endX: number;
-  endY: number;
-  text?: string;
-}
-
-export interface TypeText {
-  startX: number;
-  startY: number;
-  text: string;
-}
+import { Shape } from '@/types/alltypes';
 
 const ifFont = Gloria_Hallelujah({
   weight: '400',
@@ -36,15 +20,16 @@ const ifFont = Gloria_Hallelujah({
 export default function Home() {
   const cnv = useRef<HTMLCanvasElement>(null);
   const contextRef = useRef<null | CanvasRenderingContext2D>(null);
-  const [tool, setTool] = useState('');
-  const [drawing, setDrawing] = useState(false);
-  const [shapes, setShapes] = useState<Shape[]>([]);
-  const [writing, setWriting] = useState(false);
   const textRef = useRef<null | HTMLInputElement>(null);
   const startX = useRef<null | number>(null);
   const startY = useRef<null | number>(null);
 
-  console.log(shapes)
+  const [tool, setTool] = useState('');
+  const [drawing, setDrawing] = useState(false);
+  const [shapes, setShapes] = useState<Shape[]>([]);
+  const [selectedShape, setSelectedShape] = useState<number>(-1);
+  const [writing, setWriting] = useState(false);
+  const [draggingShape, setDraggingShape] = useState<Shape | null>(null)
 
   useEffect(() => {
     drawConfig(cnv, contextRef);
@@ -52,13 +37,21 @@ export default function Home() {
 
   return (
     <div className={`flex h-screen text-center items-center justify-center`}>
-      <div>
+      <div className=''>
         <h1>Canvas</h1>
         <Buttons tool={tool} setTool={setTool} />
         {writing && (
           <div className={`${ifFont.className} font-bold`}>
             <input
-              onBlur={() => textFocusOutHandler(contextRef, textRef, startX, startY, setShapes)}
+              onBlur={() =>
+                textFocusOutHandler(
+                  contextRef,
+                  textRef,
+                  startX,
+                  startY,
+                  setShapes
+                )
+              }
               onFocus={textOnFocusHandler}
               ref={textRef}
               style={{
@@ -70,7 +63,7 @@ export default function Home() {
                   Number(startX.current) +
                   Number(cnv.current?.getBoundingClientRect().left),
               }}
-              className={`absolute text-black border-2 `}
+              className={`absolute text-black border-2`}
             ></input>
           </div>
         )}
@@ -86,7 +79,11 @@ export default function Home() {
               setShapes,
               setTool,
               setWriting,
-              textRef, 
+              selectedShape,
+              setSelectedShape,
+              draggingShape, 
+              setDraggingShape,
+              textRef
             )
           }
           onMouseDown={(e) =>
@@ -100,6 +97,11 @@ export default function Home() {
               setDrawing,
               shapes,
               setWriting,
+              setSelectedShape,
+              selectedShape,
+              setShapes,
+              draggingShape, 
+              setDraggingShape,
               textRef
             )
           }
@@ -112,9 +114,17 @@ export default function Home() {
               startX,
               startY,
               contextRef,
-              shapes
+              shapes,
+              selectedShape,
+              setShapes, 
+              setSelectedShape, 
+              draggingShape, 
+              setDraggingShape
             )
           }
+          // onMouseLeave={() => {
+          //   setDrawing(false);
+          // }}
           width={1000}
           height={800}
           className="bg-white overflow-hidden rounded border border-black"
