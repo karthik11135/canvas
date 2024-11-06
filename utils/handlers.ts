@@ -4,7 +4,7 @@ import {
   startUpdatingShape,
   setStartXandY,
 } from './features';
-import { drawRectangle, drawCircle, drawLine } from './drawShapes';
+import { drawRectangle, drawCircle, drawLine, drawText } from './drawShapes';
 import { clearCanvasAndRedraw } from './features';
 
 export const mouseMoveHandler = (
@@ -42,6 +42,7 @@ export const mouseMoveHandler = (
     startY: startY.current,
     offSetX: e.nativeEvent.offsetX,
     offSetY: e.nativeEvent.offsetY,
+    dotted: false,
   };
 
   switch (tool) {
@@ -72,6 +73,7 @@ export const mouseDownHandler = (
   setShapes: React.Dispatch<React.SetStateAction<Shape[]>>,
   draggingShape: Shape | null,
   setDraggingShape: React.Dispatch<React.SetStateAction<Shape | null>>,
+
   textRef?: React.MutableRefObject<null | HTMLInputElement>
 ) => {
   if (!cnv || !cnv.current || (textRef && textRef.current)) return;
@@ -104,6 +106,8 @@ export const mouseDownHandler = (
         setShapes(filteredShapes);
         setWriting(false);
         return;
+      } else {
+        clearCanvasAndRedraw(contextRef.current, cnv, shapes);
       }
       break;
     case 'text':
@@ -132,9 +136,10 @@ export const mouseUpHandler = (
   setSelectedShape: React.Dispatch<React.SetStateAction<number>>,
   draggingShape: Shape | null,
   setDraggingShape: React.Dispatch<React.SetStateAction<Shape | null>>,
+  shapes: Shape[],
+  cnv: React.RefObject<HTMLCanvasElement>,
   textRef?: React.MutableRefObject<null | HTMLInputElement>
 ) => {
-
   if (tool == '') return;
   if (!startX.current || !startY.current) return;
   setTool('select');
@@ -163,6 +168,7 @@ export const mouseUpHandler = (
       startY: offsetY,
       endX: offsetX + draggingShape.endX - draggingShape.startX,
       endY: offsetY + draggingShape.endY - draggingShape.startY,
+      text: draggingShape.text,
     };
   }
 
@@ -183,23 +189,42 @@ export const textFocusOutHandler = (
 ) => {
   if (!startX.current || !startY.current) return;
   if (!textRef || !textRef.current) return;
+  if (!contextRef.current) return;
 
-  contextRef.current?.fillText(
-    textRef?.current?.value ? textRef.current.value : '',
-    startX.current,
-    startY.current
-  );
+  const ctx = contextRef.current;
 
+  const sX = startX.current,
+    sY = startY.current;
+
+  drawText({
+    ctx,
+    startX: sX,
+    startY: sY,
+    offSetX: 0,
+    offSetY: 0,
+    textStr: textRef.current.value,
+  });
+
+  ctx.closePath();
+  const lenOfText = ctx.measureText(textRef.current.value).width;
+  console.log({
+    type: 'text',
+    text: textRef?.current?.value as string,
+    startX: sX,
+    startY: sY,
+    endX: lenOfText + sX,
+    endY: sY,
+  });
   setShapes((prev) => {
     return [
       ...prev,
       {
         type: 'text',
         text: textRef?.current?.value as string,
-        startX: startX.current as number,
-        startY: startY.current as number,
-        endX: 0,
-        endY: 0,
+        startX: sX,
+        startY: sY,
+        endX: lenOfText + sX,
+        endY: sY,
       },
     ];
   });

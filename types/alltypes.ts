@@ -20,6 +20,8 @@ export interface drawShapeProps {
   startY: number;
   offSetX: number;
   offSetY: number;
+  textStr?: string;
+  dotted?: boolean;
 }
 
 export interface dragginShapeType {

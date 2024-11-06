@@ -1,5 +1,5 @@
 'use client';
-import Buttons from '@/utils/Buttons';
+import Buttons from '@/components/Buttons';
 import { useEffect, useRef, useState } from 'react';
 import { drawConfig } from '@/utils/drawConfig';
 import { Gloria_Hallelujah } from 'next/font/google';
@@ -11,6 +11,7 @@ import {
   textOnFocusHandler,
 } from '@/utils/handlers';
 import { Shape } from '@/types/alltypes';
+import HeaderTools from '@/components/HeaderTools';
 
 const ifFont = Gloria_Hallelujah({
   weight: '400',
@@ -23,23 +24,21 @@ export default function Home() {
   const textRef = useRef<null | HTMLInputElement>(null);
   const startX = useRef<null | number>(null);
   const startY = useRef<null | number>(null);
-
   const [tool, setTool] = useState('');
   const [drawing, setDrawing] = useState(false);
   const [shapes, setShapes] = useState<Shape[]>([]);
   const [selectedShape, setSelectedShape] = useState<number>(-1);
   const [writing, setWriting] = useState(false);
-  const [draggingShape, setDraggingShape] = useState<Shape | null>(null)
+  const [draggingShape, setDraggingShape] = useState<Shape | null>(null);
 
   useEffect(() => {
     drawConfig(cnv, contextRef);
   }, []);
 
   return (
-    <div className={`flex h-screen text-center items-center justify-center`}>
-      <div className=''>
-        <h1>Canvas</h1>
-        <Buttons tool={tool} setTool={setTool} />
+    <div className={``}>
+      <div className="bg-yellow-800">
+        <HeaderTools tool={tool} setTool={setTool} />
         {writing && (
           <div className={`${ifFont.className} font-bold`}>
             <input
@@ -81,8 +80,10 @@ export default function Home() {
               setWriting,
               selectedShape,
               setSelectedShape,
-              draggingShape, 
+              draggingShape,
               setDraggingShape,
+              shapes,
+              cnv,
               textRef
             )
           }
@@ -100,7 +101,7 @@ export default function Home() {
               setSelectedShape,
               selectedShape,
               setShapes,
-              draggingShape, 
+              draggingShape,
               setDraggingShape,
               textRef
             )
@@ -116,18 +117,15 @@ export default function Home() {
               contextRef,
               shapes,
               selectedShape,
-              setShapes, 
-              setSelectedShape, 
-              draggingShape, 
+              setShapes,
+              setSelectedShape,
+              draggingShape,
               setDraggingShape
             )
           }
-          // onMouseLeave={() => {
-          //   setDrawing(false);
-          // }}
-          width={1000}
-          height={800}
-          className="bg-white overflow-hidden rounded border border-black"
+          width={1450}
+          height={1000}
+          className="bg-white mx-auto overflow-hidden rounded border border-black"
           ref={cnv}
         ></canvas>
       </div>

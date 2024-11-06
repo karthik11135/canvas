@@ -1,5 +1,5 @@
 import { Shape } from '@/types/alltypes';
-import { drawRectangle, drawCircle, drawLine } from './drawShapes';
+import { drawRectangle, drawCircle, drawLine, drawText } from './drawShapes';
 
 export const redrawAllshapes = (
   shapes: Shape[],
@@ -70,12 +70,21 @@ export const findNearestShape = (
         }
         return false;
       case 'line':
-        console.log(x, y, shape);
         if (
           ((x >= shape.startX - 3 && x <= shape.endX + 3) ||
             (x <= shape.startX - 3 && x >= shape.endX + 3)) &&
           ((y >= shape.startY && y <= shape.endY) ||
             (y >= shape.endY && y <= shape.startY))
+        ) {
+          return true;
+        }
+        return false;
+      case 'text':
+        if (
+          x > shape.startX - 3 &&
+          x < shape.endX + 3 &&
+          y > shape.startY - 10 &&
+          y < shape.startY + 10
         ) {
           return true;
         }
@@ -124,6 +133,7 @@ export const startUpdatingShape = (
         startY: startY,
         offSetX: startX + width,
         offSetY: startY + height,
+        dotted: true,
       });
       break;
     case 'circle':
@@ -140,13 +150,14 @@ export const startUpdatingShape = (
             updatingShape.endY
           ),
         offSetY: startY,
+        dotted: true,
       });
       break;
     case 'line':
       const deltaX = updatingShape.endX - updatingShape.startX;
       const deltaY = updatingShape.endY - updatingShape.startY;
 
-      const angle = Math.atan2(deltaX, deltaY);
+      const angle = Math.atan2(deltaY, deltaX);
       const distance = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
 
       drawLine({
@@ -155,9 +166,20 @@ export const startUpdatingShape = (
         startY: startY,
         offSetX: startX + distance * Math.cos(angle),
         offSetY: startY + distance * Math.sin(angle),
+        dotted: true,
       });
       break;
-    // }
+    case 'text':
+      drawText({
+        ctx: contextRef.current,
+        startX: startX,
+        startY: startY,
+        offSetX: updatingShape.endX ,
+        offSetY: startY,
+        textStr: updatingShape.text,
+        dotted: true,
+      });
+      break;
   }
 };
 
