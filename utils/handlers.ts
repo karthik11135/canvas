@@ -22,7 +22,7 @@ export const mouseMoveHandler = (
   draggingShape: Shape | null,
   setDraggingShape: React.Dispatch<React.SetStateAction<Shape | null>>
 ) => {
-  // console.log(shapes);
+  console.log(shapes);
   if (!drawing || !startX.current || !startY.current || !cnv) return;
 
   clearCanvasAndRedraw(contextRef.current, cnv, shapes);
@@ -142,7 +142,7 @@ export const mouseUpHandler = (
 ) => {
   if (tool == '') return;
   if (!startX.current || !startY.current) return;
-  setTool('select');
+  if(tool !== 'line') setTool('select');
   setDrawing(false);
   setWriting(false);
   if (tool === 'select' && !draggingShape) return;

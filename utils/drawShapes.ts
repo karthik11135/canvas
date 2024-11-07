@@ -32,7 +32,6 @@ export const drawCircle = ({
   );
   ctx.arc(startX, startY, radius, 0, 2 * Math.PI);
   ctx.stroke();
-  
   if (dotted === true) {
     ctx.beginPath();
     ctx.setLineDash([3, 7]);
@@ -54,8 +53,6 @@ export const drawRectangle = ({
 
   ctx.beginPath();
   ctx.strokeRect(startX, startY, offSetX - startX, offSetY - startY);
-
-  ctx.closePath();
 
   if (dotted === true) {
     ctx.beginPath();

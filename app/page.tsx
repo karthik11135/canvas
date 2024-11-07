@@ -1,5 +1,4 @@
 'use client';
-import Buttons from '@/components/Buttons';
 import { useEffect, useRef, useState } from 'react';
 import { drawConfig } from '@/utils/drawConfig';
 import { Gloria_Hallelujah } from 'next/font/google';
@@ -37,7 +36,7 @@ export default function Home() {
 
   return (
     <div className={``}>
-      <div className="bg-yellow-800">
+      <div className="bg-primary">
         <HeaderTools tool={tool} setTool={setTool} />
         {writing && (
           <div className={`${ifFont.className} font-bold`}>
@@ -62,7 +61,7 @@ export default function Home() {
                   Number(startX.current) +
                   Number(cnv.current?.getBoundingClientRect().left),
               }}
-              className={`absolute text-black border-2`}
+              className={`absolute focus-within:none outline-none px-1 py-1.5 rounded-md text-black border-2`}
             ></input>
           </div>
         )}
